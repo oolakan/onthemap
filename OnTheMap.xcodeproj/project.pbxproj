@@ -14,7 +14,6 @@
 		431BEFB2204ECB7100297450 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 431BEFB1204ECB7100297450 /* Assets.xcassets */; };
 		431BEFB5204ECB7100297450 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 431BEFB3204ECB7100297450 /* LaunchScreen.storyboard */; };
 		431BEFC4204EE8BF00297450 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFC3204EE8BF00297450 /* LoginViewController.swift */; };
-		431BEFC7204FD3E700297450 /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFC6204FD3E700297450 /* RequestHandler.swift */; };
 		431BEFC9205014F100297450 /* GCDBlackBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFC8205014F100297450 /* GCDBlackBox.swift */; };
 		431BEFCC205018B300297450 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFCB205018B300297450 /* Constants.swift */; };
 		431BEFCE205417A400297450 /* NearestUsersMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFCD205417A400297450 /* NearestUsersMapViewController.swift */; };
@@ -38,7 +37,6 @@
 		431BEFB4204ECB7100297450 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		431BEFB6204ECB7100297450 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		431BEFC3204EE8BF00297450 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
-		431BEFC6204FD3E700297450 /* RequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestHandler.swift; sourceTree = "<group>"; };
 		431BEFC8205014F100297450 /* GCDBlackBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GCDBlackBox.swift; sourceTree = "<group>"; };
 		431BEFCB205018B300297450 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		431BEFCD205417A400297450 /* NearestUsersMapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestUsersMapViewController.swift; sourceTree = "<group>"; };
@@ -84,7 +82,6 @@
 			isa = PBXGroup;
 			children = (
 				431BEFCA205018A700297450 /* util */,
-				431BEFC5204FD3CA00297450 /* requesthandler */,
 				431BEFC0204EE6A900297450 /* view */,
 				431BEFBF204EE69C00297450 /* model */,
 				431BEFBE204EE69600297450 /* controller */,
@@ -128,14 +125,6 @@
 				431BEFD72055AFB600297450 /* NearestUserTableViewCell.swift */,
 			);
 			path = view;
-			sourceTree = "<group>";
-		};
-		431BEFC5204FD3CA00297450 /* requesthandler */ = {
-			isa = PBXGroup;
-			children = (
-				431BEFC6204FD3E700297450 /* RequestHandler.swift */,
-			);
-			path = requesthandler;
 			sourceTree = "<group>";
 		};
 		431BEFCA205018A700297450 /* util */ = {
@@ -222,7 +211,6 @@
 				431BEFC4204EE8BF00297450 /* LoginViewController.swift in Sources */,
 				431BEFC9205014F100297450 /* GCDBlackBox.swift in Sources */,
 				431BEFD42054180500297450 /* LinkNameViewController.swift in Sources */,
-				431BEFC7204FD3E700297450 /* RequestHandler.swift in Sources */,
 				431BEFB0204ECB7100297450 /* OnTheMap.xcdatamodeld in Sources */,
 				431BEFDA2055B6EF00297450 /* Users.swift in Sources */,
 				431BEFDC2055DA8E00297450 /* PinAnnotation.swift in Sources */,

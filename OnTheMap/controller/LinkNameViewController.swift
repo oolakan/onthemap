@@ -213,6 +213,7 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
                     do {
                         try self.context.save()
                         performUIUpdatesOnMain {
+                                self.dismiss(animated: false, completion: nil)
                             self.goHome()
                         }
                     } catch {
