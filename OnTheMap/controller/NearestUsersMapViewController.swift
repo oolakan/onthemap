@@ -32,7 +32,7 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
         let location = locations.last
         let center = CLLocationCoordinate2D(latitude: location!.coordinate.latitude, longitude: location!.coordinate.longitude)
          self.mapView.setRegion(MKCoordinateRegionMakeWithDistance(center, 1500, 1500), animated: true)
-         let pin = PinAnnotation(title: "Ikeja", subtitle: "Nigeria", coordinate: center)
+         let pin = PinAnnotation(title: "", subtitle: "", coordinate: center)
          self.mapView.addAnnotation(pin)
         self.locationManager.stopUpdatingLocation()
     }
