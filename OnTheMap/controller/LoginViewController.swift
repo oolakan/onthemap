@@ -163,7 +163,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @objc func keyboardWillShow(_ notification:Notification) {
         if (passwordField.isEditing) {
-            view.frame.origin.y -= getKeyboardHeight(notification) - 40
+            view.frame.origin.y -= getKeyboardHeight(notification) - 180
         }
     }
     

@@ -9,9 +9,9 @@
 import UIKit
 import MapKit
 import CoreData
+
 class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewDelegate{
 
-    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var submitBtn: UIButton!
     @IBOutlet weak var linkTextField: UITextField!
@@ -53,16 +53,21 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
         configureTextField(textfield: linkTextField, withText: "Enter a link to share here")
     }
     
-    @IBAction func cancel(_ sender: Any) {
-        self.navigateToLocationNamePage()
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        unsubscribeFromKeyboardNotifications()
     }
     
-    func navigateToLocationNamePage()  {
-        let controller: LocationNameViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "locationname") as? LocationNameViewController
-        controller.requestType = self.requestType
+    @IBAction func cancel(_ sender: Any) {
+        navigateToHomePage()
+    }
+    
+    func navigateToHomePage()  {
+        let controller: HomeViewController!
+        controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
         self.present(controller, animated: true, completion: nil)
     }
+    
     func getUserData()  {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Users")
         request.returnsObjectsAsFaults = false
@@ -140,12 +145,8 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
                     }
             case .failure(let error):
                 print(error)
-                if !(self.presentingViewController?.isBeingDismissed)! {
                     self.dismiss(animated: true, completion: nil)
                     self.showAlert(title: "Message", message: error.localizedDescription)
-                }
-                
-                
             }
         })
     }
@@ -166,10 +167,10 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
                         do {
                             try self.context.save()
                             performUIUpdatesOnMain {
-                                if !(self.presentingViewController?.isBeingDismissed)! {
-                                    self.dismiss(animated: false, completion: nil)
-                                    self.goHome()
-                                }
+                               
+                            self.dismiss(animated: false, completion: nil)
+                            self.goHome()
+                                
                             }
                         } catch {
                             print("Failed saving")
@@ -188,12 +189,12 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     }
     
     fileprivate func goHome() {
-        if !(self.presentingViewController?.isBeingDismissed)! {
-            self.dismiss(animated: true, completion: nil)
-        }
-        var controller: HomeViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
-        self.present(controller, animated: true, completion: nil)
+        dismiss(animated: true, completion: {
+            var controller: HomeViewController!
+            controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
+            self.present(controller, animated: true, completion: nil)
+        })
+       
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -202,21 +203,19 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     }
     
     func subscribeToKeyboardNotifications() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
     }
     
     func unsubscribeFromKeyboardNotifications() {
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
     }
-    
     @objc func keyboardWillShow(_ notification:Notification) {
         if (linkTextField.isEditing) {
-            self.view.frame.origin.y -= getKeyboardHeight(notification) - 40
+            self.view.frame.origin.y -= getKeyboardHeight(notification) - 200
         }
     }
-    
     @objc func keyboardWillHide(_ notification: Notification) {
         //Hide the top navigation bar
         if self.view.frame.origin.y != 0 {

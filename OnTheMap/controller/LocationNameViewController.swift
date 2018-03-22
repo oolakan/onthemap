@@ -22,13 +22,16 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
         subscribeToKeyboardNotifications()
         configureTextField(textfield: locationName, withText: "Enter your location here")
     }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        unsubscribeFromKeyboardNotifications()
+    }
     @IBAction func navigateToStudentUrlPage()  {
        getLocation(locationName: locationName.text!)
     }
     @IBAction func cancel(_ sender: Any) {
-        var controller: HomeViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as! HomeViewController
-        present(controller, animated: true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     func showActivityIndicatory()  {
         let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
@@ -43,19 +46,20 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
     }
     
     fileprivate func dismissIndicator() {
-        if !(self.presentingViewController?.isBeingDismissed)! {
+        
             self.dismiss(animated: true, completion: nil)
-        }
+        
     }
     
     func getLocation(locationName: String)  {
-        displayOverlay()
+     //   displayOverlay()
         localSearchRequest = MKLocalSearchRequest()
         localSearchRequest.naturalLanguageQuery = locationName
         localSearch = MKLocalSearch(request: localSearchRequest)
         localSearch.start { (localSearchResponse, error) -> Void in
+            //self.dismissIndicator()
             if localSearchResponse == nil{
-                self.dismissIndicator()
+                
                 let alertController = UIAlertController(title: nil, message: "Place Not Found", preferredStyle: UIAlertControllerStyle.alert)
                 alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: nil))
                 self.present(alertController, animated: true, completion: nil)
@@ -64,14 +68,18 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
             
                 let longitude = localSearchResponse!.boundingRegion.center.longitude
                 let latitude = localSearchResponse!.boundingRegion.center.latitude
-                let controller: LinkNameViewController!
-                controller = self.storyboard?.instantiateViewController(withIdentifier: "studenturl") as? LinkNameViewController
-                controller.placeName = locationName
-                controller.requestType = self.requestType
-                controller.longitude = longitude
-                controller.latitude = latitude
-                self.dismissIndicator()
-                self.present(controller, animated: true, completion: nil)
+            
+            
+                     let controller: LinkNameViewController!
+                    controller = self.storyboard?.instantiateViewController(withIdentifier: "studenturl") as? LinkNameViewController
+                    controller.placeName = locationName
+                    controller.requestType = self.requestType
+                    controller.longitude = longitude
+                    controller.latitude = latitude
+                    self.present(controller, animated: true, completion: nil)
+                
+            
+            
         }
     }
     fileprivate func configureTextField(textfield: UITextField, withText text: String) {
@@ -84,6 +92,7 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
     }
     
     func subscribeToKeyboardNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
     }
     
@@ -91,7 +100,11 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
     }
- 
+    @objc func keyboardWillShow(_ notification:Notification) {
+        if (locationName.isEditing) {
+            self.view.frame.origin.y -= getKeyboardHeight(notification) - 100
+        }
+    }
     @objc func keyboardWillHide(_ notification: Notification) {
         //Hide the top navigation bar
         if self.view.frame.origin.y != 0 {

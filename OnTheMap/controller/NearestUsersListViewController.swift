@@ -27,6 +27,38 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         tableView.delegate = self
     }
     
+    @IBAction func refresh(_ sender: Any) {
+        if !InternetConnection.isConnectedToNetwork() {
+            self.showErrorAlert(title: "Message", message: "No internet connection")
+            return
+        }
+        displayIndicator()
+        apiClient = ApiClient()
+        apiClient.getLocations(completionHandler: { studentsLocation in
+            switch studentsLocation {
+            case .success(let students):
+                print(students)
+                performUIUpdatesOnMain {
+                    if students.count > 0 { //data already saved in appdelegate
+                        self.dismiss(animated: true, completion: nil)
+                       self.tableView.reloadData()
+                    }
+                    else {
+                        if !(self.presentingViewController?.isBeingDismissed)! {
+                            self.dismiss(animated: false, completion: nil)
+                            self.showErrorAlert(title: "Message", message: "No student location found")
+                        }
+                    }
+                }
+            case .failure(let error):
+                print(error)
+                if !(self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: false, completion: nil)
+                    self.showErrorAlert(title: "Message", message: error.localizedDescription)
+                }
+            }
+        })
+    }
     @IBAction func logout(_ sender: Any) {
         if !InternetConnection.isConnectedToNetwork() {
             self.showErrorAlert(title: "Message", message: "No internet connection")
@@ -61,19 +93,19 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
         do {
             try managedContext.execute(userData)
-            performUIUpdatesOnMain {
-                self.dismiss(animated: true, completion: nil)
-                var controller: LoginViewController!
-                controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as! LoginViewController
-                self.present(controller, animated: true, completion: nil)
+            
+                performUIUpdatesOnMain {
+                    self.dismiss(animated: true, completion: {
+                        var controller: LoginViewController!
+                        controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as? LoginViewController
+                        self.present(controller, animated: true, completion: nil)
+                    })
             }
         }
         catch {
             print(error)
         }
     }
-    
-    
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
@@ -137,10 +169,12 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     
     
     fileprivate func goToLocationNameViewController(requestType: String) {
-        var controller: LocationNameViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "locationname") as? LocationNameViewController
-        controller.requestType = requestType
-        self.present(controller, animated: true, completion: nil)
+       
+            var controller: LocationNameViewController!
+            controller = self.storyboard?.instantiateViewController(withIdentifier: "locationname") as? LocationNameViewController
+            controller.requestType = requestType
+            self.present(controller, animated: true, completion: nil)
+        
     }
     
     @IBAction func checkIfLocationPosted() {

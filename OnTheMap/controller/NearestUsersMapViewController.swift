@@ -42,6 +42,54 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
         print("Errors " + error.localizedDescription)
     }
     
+    @IBAction func logout(_ sender: Any) {
+        if !InternetConnection.isConnectedToNetwork() {
+            self.showErrorAlert(title: "Message", message: "No internet connection")
+            return
+        }
+        self.displayOverlay()
+        let apiClient = ApiClient()
+        apiClient.logout(completionHandler: { response in
+            switch response {
+            case .success(let res):
+                let id = res["id"] as! String
+                if !id.isEmpty {
+                    performUIUpdatesOnMain {
+                        UserDefaults.standard.set("", forKey: "account_key")//empty storage
+                        self.deleteAllData(entity: Constants.User.userEntityName)
+                    }
+                    
+                }
+            case .failure(let error):
+                print(error)
+                if (self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: true, completion: nil)
+                }
+            }
+        })
+    }
+    
+    func deleteAllData(entity: String)
+    {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let managedContext = appDelegate.persistentContainer.viewContext
+        let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
+        do {
+            try managedContext.execute(userData)
+            performUIUpdatesOnMain {
+                self.dismiss(animated: true, completion: {
+                    var controller: LoginViewController!
+                    controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as? LoginViewController
+                    self.present(controller, animated: true, completion: nil)
+                })
+            }
+        }
+        catch {
+            print(error)
+        }
+    }
+    
+    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView)
     {
         if let annotation = view.annotation as? PinAnnotation
@@ -62,7 +110,6 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
         self.getLocations()
     }
     
-    
     func getLocations() {
         if !InternetConnection.isConnectedToNetwork() {
             self.showErrorAlert(title: "Message", message: "No internet connection")
@@ -75,9 +122,9 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
             case .success(let students):
                 print(students)
                   performUIUpdatesOnMain {
+                    self.dismiss(animated: false, completion: nil)
                     if students.count > 0 {
-                     self.dismiss(animated: false, completion: nil)
-                    print("Result is greater than 0")
+                     print("Result is greater than 0")
                         for student in students {
                             let locationCordinate = CLLocationCoordinate2DMake(student.dict[Constants.ParseResponseValues.latitude] as! Double, student.dict[Constants.ParseResponseValues.longitude] as! Double )
                             
@@ -122,7 +169,6 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
                 let stringValue = "\(value)"
                 // escape it
                 let escapedValue = stringValue.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-                
                 // append it
                 keyValuePairs.append(key + "=" + "\(escapedValue!)")
                 
@@ -134,10 +180,12 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
     
     
     fileprivate func goToLocationNameViewController(requestType: String) {
-        var controller: LocationNameViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "locationname") as? LocationNameViewController
-        controller.requestType = requestType
-        self.present(controller, animated: true, completion: nil)
+       
+            var controller: LocationNameViewController!
+            controller = self.storyboard?.instantiateViewController(withIdentifier: "locationname") as? LocationNameViewController
+            controller.requestType = requestType
+            self.present(controller, animated: true, completion: nil)
+       
     }
     
     @IBAction func checkIfLocationPosted() {
@@ -168,6 +216,7 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
     }
     //https://stackoverflow.com/questions/24190277/writing-handler-for-uialertaction
     func showAlert(message: String)  {
+        
         let actionSheetController = UIAlertController (title: "My Action Title", message: message, preferredStyle: UIAlertControllerStyle.actionSheet)
         
         actionSheetController.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil))
