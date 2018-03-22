@@ -19,6 +19,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     var locationObjectId: String!
     var appDelegate: AppDelegate!
     var apiClient: ApiClient!
+    var studentsDataSource: StudentDataSource!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,7 +28,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         tableView.delegate = self
     }
     
-    @IBAction func refresh(_ sender: Any) {
+    fileprivate func getStudentLocations() {
         if !InternetConnection.isConnectedToNetwork() {
             self.showErrorAlert(title: "Message", message: "No internet connection")
             return
@@ -39,9 +40,10 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
             case .success(let students):
                 print(students)
                 performUIUpdatesOnMain {
-                    if students.count > 0 { //data already saved in appdelegate
+                    if students.studentInfo.count > 0 { //data already saved in appdelegate
+                        self.studentsDataSource = students
                         self.dismiss(animated: true, completion: nil)
-                       self.tableView.reloadData()
+                        self.tableView.reloadData()
                     }
                     else {
                         if !(self.presentingViewController?.isBeingDismissed)! {
@@ -58,6 +60,10 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
                 }
             }
         })
+    }
+    
+    @IBAction func refresh(_ sender: Any) {
+        getStudentLocations()
     }
     @IBAction func logout(_ sender: Any) {
         if !InternetConnection.isConnectedToNetwork() {
@@ -93,14 +99,9 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
         do {
             try managedContext.execute(userData)
+            self.dismiss(animated: true, completion: nil)//dismiss overlay
+            self.dismiss(animated: true, completion: nil)//dismiss view controller
             
-                performUIUpdatesOnMain {
-                    self.dismiss(animated: true, completion: {
-                        var controller: LoginViewController!
-                        controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as? LoginViewController
-                        self.present(controller, animated: true, completion: nil)
-                    })
-            }
         }
         catch {
             print(error)
@@ -112,22 +113,21 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return (UIApplication.shared.delegate as! AppDelegate).users.count
+        return studentsDataSource != nil ? studentsDataSource.studentInfo.count : 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as? NearestUserTableViewCell else {
             return UITableViewCell()
         }
-        cell.userName.text = "\((UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.firstName] as! String)\((UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.lastName] as! String)"
+        cell.userName.text = "\(studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.firstName] as! String)\(studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.lastName] as! String)"
         
         cell.pin.image = UIImage(named: "icon_pin")
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //https://stackoverflow.com/questions/25945324/swift-open-link-in-safari
-        guard let url = URL(string: (UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.mediaURL] as! String ) else {
+        guard let url = URL(string: studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.mediaURL] as! String ) else {
             return
         }
         if #available(iOS 10.0, *) {
@@ -138,11 +138,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     }
     
     func getLocations() {
-        apiClient = ApiClient()
-        print((UIApplication.shared.delegate as! AppDelegate).users)
-        performUIUpdatesOnMain {
-        self.tableView.reloadData()
-         }
+        getStudentLocations()
     }
     private func escapedParameters(_ parameters: [String:AnyObject]) -> String {
         if parameters.isEmpty {

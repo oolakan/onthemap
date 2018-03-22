@@ -49,23 +49,20 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
         getLocation(locationName: self.placeName)
         getUserData()
         getPreviousLocationObjectId()
-        subscribeToKeyboardNotifications()
         configureTextField(textfield: linkTextField, withText: "Enter a link to share here")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        unsubscribeFromKeyboardNotifications()
+        
     }
     
     @IBAction func cancel(_ sender: Any) {
-        navigateToHomePage()
+        navigateToNamePage()
     }
     
-    func navigateToHomePage()  {
-        let controller: HomeViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
-        self.present(controller, animated: true, completion: nil)
+    func navigateToNamePage()  {
+        self.dismiss(animated: true, completion: nil)
     }
     
     func getUserData()  {
@@ -197,50 +194,13 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
        
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        linkTextField.resignFirstResponder()
-        return true
-    }
-    
-    func subscribeToKeyboardNotifications() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
-         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
-    }
-    
-    func unsubscribeFromKeyboardNotifications() {
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
-    }
-    @objc func keyboardWillShow(_ notification:Notification) {
-        if (linkTextField.isEditing) {
-            self.view.frame.origin.y -= getKeyboardHeight(notification) - 200
-        }
-    }
-    @objc func keyboardWillHide(_ notification: Notification) {
-        //Hide the top navigation bar
-        if self.view.frame.origin.y != 0 {
-            self.view.frame.origin.y += getKeyboardHeight(notification)
-        }
-    }
-    
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if linkTextField.isEditing {
             linkTextField.text = nil
         }
-    
+        
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        if self.view.frame.origin.y != 0 {
-            self.view.frame.origin.y = 0
-        }
-    }
-    
-    func getKeyboardHeight(_ notification:Notification) -> CGFloat {
-        let userInfo = notification.userInfo
-        let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue // of CGRect
-        return keyboardSize.cgRectValue.height
-    }
     //https://stackoverflow.com/questions/27960556/loading-an-overlay-when-running-long-tasks-in-ios
     func showActivityIndicatory()  {
         let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
@@ -272,5 +232,4 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
         alert.view.addSubview(loadingIndicator)
         present(alert, animated: true, completion: nil)
     }
-    
 }

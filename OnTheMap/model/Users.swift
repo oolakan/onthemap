@@ -25,6 +25,3 @@ struct Users {
     
 }
 
-struct StudentInformation {
-    var studentInfo: [Users]
-}

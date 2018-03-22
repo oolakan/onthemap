@@ -18,7 +18,7 @@ class ApiClient {
     }
     
     enum LocationResult {
-        case success([Users])
+        case success(StudentDataSource)
         case failure(Error)
     }
     
@@ -191,18 +191,22 @@ class ApiClient {
                         print("Cannot find key 'Basic' in \(parseResult)")
                         return
                     }
+                    let studentDataSource = StudentDataSource()
                     if arrayOfResults.count > 0 {
                         for result in arrayOfResults {
-                            appDelegate.users.append(Users(dict: result))
+                            studentDataSource.studentInfo.append(Users(dict: result))
+//                            StudentLocationInfo.studentInfo.append(Users(dict: result))
+                           // appDelegate.users.append(Users(dict: result))
                         }
                     }
+                    if let error = error {
+                        completionHandler(.failure(error))
+                    }
+                    else {
+                        completionHandler(.success(studentDataSource))
+                    }
             }
-            if let error = error {
-                completionHandler(.failure(error))
-            }
-            else {
-                completionHandler(.success(appDelegate.users))
-            }
+           
         
         }
         task.resume()

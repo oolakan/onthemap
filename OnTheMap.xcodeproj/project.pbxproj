@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		430943A5206452D500F0B2DE /* StudentDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430943A4206452D500F0B2DE /* StudentDataSource.swift */; };
 		431BEFA8204ECB7100297450 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFA7204ECB7100297450 /* AppDelegate.swift */; };
 		431BEFAD204ECB7100297450 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 431BEFAB204ECB7100297450 /* Main.storyboard */; };
 		431BEFB0204ECB7100297450 /* OnTheMap.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFAE204ECB7100297450 /* OnTheMap.xcdatamodeld */; };
@@ -29,6 +30,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		430943A4206452D500F0B2DE /* StudentDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudentDataSource.swift; sourceTree = "<group>"; };
 		431BEFA4204ECB7100297450 /* OnTheMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OnTheMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		431BEFA7204ECB7100297450 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		431BEFAC204ECB7100297450 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 			children = (
 				431BEFD92055B6EF00297450 /* Users.swift */,
 				431BEFDB2055DA8E00297450 /* PinAnnotation.swift */,
+				430943A4206452D500F0B2DE /* StudentDataSource.swift */,
 			);
 			path = model;
 			sourceTree = "<group>";
@@ -210,6 +213,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				430943A5206452D500F0B2DE /* StudentDataSource.swift in Sources */,
 				431BEFD82055AFB600297450 /* NearestUserTableViewCell.swift in Sources */,
 				431BEFC4204EE8BF00297450 /* LoginViewController.swift in Sources */,
 				431BEFC9205014F100297450 /* GCDBlackBox.swift in Sources */,

@@ -30,6 +30,7 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
         self.locationManager.startUpdatingLocation()
         self.mapView.showsUserLocation = true
     }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let location = locations.last
         let center = CLLocationCoordinate2D(latitude: location!.coordinate.latitude, longitude: location!.coordinate.longitude)
@@ -76,13 +77,8 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
         let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
         do {
             try managedContext.execute(userData)
-            performUIUpdatesOnMain {
-                self.dismiss(animated: true, completion: {
-                    var controller: LoginViewController!
-                    controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as? LoginViewController
-                    self.present(controller, animated: true, completion: nil)
-                })
-            }
+            self.dismiss(animated: true, completion: nil)//dismiss overlay
+            self.dismiss(animated: true, completion: nil)//dismiss view controller
         }
         catch {
             print(error)
@@ -123,9 +119,9 @@ class NearestUsersMapViewController: UIViewController, MKMapViewDelegate, CLLoca
                 print(students)
                   performUIUpdatesOnMain {
                     self.dismiss(animated: false, completion: nil)
-                    if students.count > 0 {
+                    if students.studentInfo.count > 0 {
                      print("Result is greater than 0")
-                        for student in students {
+                        for student in students.studentInfo {
                             let locationCordinate = CLLocationCoordinate2DMake(student.dict[Constants.ParseResponseValues.latitude] as! Double, student.dict[Constants.ParseResponseValues.longitude] as! Double )
                             
                             let title = student.dict[Constants.ParseResponseValues.firstName] as! String
