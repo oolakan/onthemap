@@ -37,6 +37,7 @@ struct Constants {
         static let APIBaseURL = "https://www.udacity.com/api/"
         static let SESSION_URL = Udacity.APIBaseURL + "session"
         static let GET_USER_URL = Udacity.APIBaseURL + "users/"
+        static let DELETE_METHOD = "DELETE"
     }
     
     // MARK: Parse Parameter Keys
@@ -55,6 +56,7 @@ struct Constants {
         static let latitude = "latitude"
         static let longitude = "longitude"
         static let mapString = "mapString"
+        static let order = "order"
        
     }
     
@@ -85,6 +87,7 @@ struct Constants {
         static let ResponseFormat = "json"
         static let CONTENT_TYPE_FORMAT = "application/json"
         static let DisableJSONCallback = "1" /* 1 means "yes" */
+        static let sorted = "-updatedAt"
     }
     
     // MARK: Parse Response Keys

@@ -15,6 +15,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var loginBtn: UIButton!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var emailField: UITextField!
+    var apiClient: ApiClient!
     var accountKey:String = ""
     
     var newUser: NSManagedObject!
@@ -25,10 +26,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         subscribeToKeyboardNotifications()
         configureTextField(textfield: emailField, withText: "Enter Username")
         configureTextField(textfield: passwordField, withText: "Enter Password")
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -49,7 +46,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     fileprivate func saveUserData(_ user: NSDictionary) {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        self.context = appDelegate.persistentContainer.viewContext
+        context = appDelegate.persistentContainer.viewContext
         let entity = NSEntityDescription.entity(forEntityName: Constants.User.userEntityName, in: self.context)
         self.newUser = NSManagedObject(entity: entity!, insertInto: self.context)
         
@@ -61,123 +58,91 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         self.newUser.setValue(uniqueKey, forKey: Constants.User.uniqueKey)
         do {
             try self.context.save()
+                self.goHome()
+            
         } catch {
             print("Unable to save")
         }
     }
     
     func getUser(_ userId: String) {
-        let request = URLRequest(url: URL(string: Constants.Udacity.GET_USER_URL + userId)!)
-        let session = URLSession.shared
-        let task = session.dataTask(with: request) { data, response, error in
-            if error != nil { // Handle error...
-                return
-            }
-            let range = Range(5..<data!.count)
-            let newData = data?.subdata(in: range) /* subset response data! */
-            print(String(data: newData!, encoding: .utf8)!)
-            let json: Any?
-            do
-            {
-                json = try JSONSerialization.jsonObject(with: newData!, options: .allowFragments)
-            }
-            catch
-            {
-                print("Error parsing data");
-                return
-            }
-            guard let server_response = json as? NSDictionary else
-            {
-                print("Error parsing json")
-                return
-            }
-            print(server_response)
-            if let user = server_response[Constants.UdacityResponseValues.user] as? NSDictionary
-            {
-                performUIUpdatesOnMain {
-                    self.saveUserData(user)
-                    self.dismiss(animated: false, completion: nil)
-                    self.goHome()
+        apiClient = ApiClient()
+        apiClient.getUser(userId: userId, completionHandler: {result in
+            switch result {
+            case .success(let user):
+                print(user)
+                if let user = user[Constants.UdacityResponseValues.user] as? NSDictionary
+                {
+                    performUIUpdatesOnMain {
+                        self.saveUserData(user)
+                    }
+                }
+            case .failure(let error):
+                print(error)
+               
+                if !(self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: true, completion: nil)
+                     self.showAlert(title: "Message", message: error.localizedDescription)
                 }
             }
-        }
-        task.resume()
+        })
     }
     
     fileprivate func goHome() {
-        var controller: HomeViewController!
-        controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
-        self.present(controller, animated: true, completion: nil)
+        performUIUpdatesOnMain {
+            self.dismiss(animated: false, completion: nil)
+            var controller: HomeViewController!
+            controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
+            self.present(controller, animated: true, completion: nil)
+        }
+      
     }
     
     @IBAction func doAuth(_ sender: Any) {
+        let email = emailField.text
+        let password = passwordField.text
+        if !InternetConnection.isConnectedToNetwork() {
+            self.showAlert(title: "Message", message: "No internet connection")
+            return
+        }
+        if (email?.isEmpty)! {
+            self.showAlert(title: "Message", message: "Enter your email address")
+            return
+        }
+        if (password?.isEmpty)! {
+            self.showAlert(title: "Message", message: "Enter your password")
+            return
+        }
         self.displayOverlay();
-        let params: NSMutableDictionary = NSMutableDictionary()
-        let _params: NSMutableDictionary = NSMutableDictionary()
-        params.setValue(emailField.text, forKey: Constants.UdacityParameterKeys.USERNAME)
-        params.setValue(passwordField.text, forKey: Constants.UdacityParameterKeys.PASSWORD)
-        _params.setValue(params, forKey: Constants.Udacity.udacityName)
-        let jsonData = try! JSONSerialization.data(withJSONObject: _params, options: JSONSerialization.WritingOptions())
-        let jsonString = String(data: jsonData, encoding: .utf8)
-
-        var url = URL(string: Constants.Udacity.SESSION_URL)!
-        var request = URLRequest(url: url)
-        request.httpMethod = Constants.ParseParameterValues.POST_METHOD
-        request.addValue(Constants.ParseParameterValues.CONTENT_TYPE_FORMAT, forHTTPHeaderField: Constants.ParseParameterKeys.ACCEPT)
-        request.addValue(Constants.ParseParameterValues.CONTENT_TYPE_FORMAT, forHTTPHeaderField: Constants.ParseParameterKeys.CONTENT_TYPE)
-        
-        request.httpBody = jsonString?.data(using: .utf8)
-        //jsonString?.data(using: .utf8)
-        
-        let session = URLSession.shared
-        let task = session.dataTask(with: request) {data, response, error in
-            
-            // if an error occurs, print it and re-enable the UI
-            func displayError(_ error: String) {
-                print(error)
-                print("URL at time of error: \(url)")
-            }
-            if error != nil {
-                return
-            }
-            let range = Range(5..<data!.count)
-            let newData = data?.subdata(in: range) /* subset response data! */
-            print(String(data: newData!, encoding: .utf8)!)
-            let json: Any?
-            do
-            {
-                json = try JSONSerialization.jsonObject(with: newData!, options: .allowFragments)
-            }
-            catch
-            {
-                print("Error parsing data");
-                return
-            }
-            guard let server_response = json as? NSDictionary else
-            {
-                print("Error parsing json")
-                return
-            }
-            if let account = server_response["account"] as? NSDictionary
-            {
-                if let account_key = account["key"] as? String
-                {
+        apiClient = ApiClient()
+        apiClient.doAuth(username: email!, password: password!, completionHandler: {result in
+            switch result {
+                case .success(let response):
+                    print(response)
+                    guard let account = response["account"] as? NSDictionary else
+                    {
+                        print("Error")
+                        performUIUpdatesOnMain {
+                            self.dismiss(animated: true, completion: nil)
+                            self.showAlert(title: "Login Error", message: "Invalid username or password!")
+                        }
+                        return
+                    }
+                    let account_key = account["key"] as? String
                     performUIUpdatesOnMain {
-                        self.accountKey = account_key
+                        self.accountKey = account_key!
                         let preferences = UserDefaults.standard
                         preferences.set(account_key, forKey: "account_key")
-                        if !(preferences.string(forKey: "account_key")?.isEmpty)! {
-                            self.getUser(self.accountKey)
-                        }
-                        else {
-                            print("Value not saved")
-                        }
+                        self.getUser(self.accountKey)
+                        print("session id is\(self.accountKey)")
                     }
-                    print("session id is\(account_key)")
-                }
+                case .failure(let error):
+                    
+                        self.dismiss(animated: true, completion: nil)
+                        self.showAlert(title: "Message", message: error.localizedDescription)
+                    
             }
-        }
-        task.resume()
+        })
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -198,7 +163,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @objc func keyboardWillShow(_ notification:Notification) {
         if (passwordField.isEditing) {
-            self.view.frame.origin.y -= getKeyboardHeight(notification) - 40
+            view.frame.origin.y -= getKeyboardHeight(notification) - 40
         }
     }
     
@@ -241,6 +206,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         alert.view.addSubview(loadingIndicator)
         present(alert, animated: true, completion: nil)
+    }
+    
+    func showAlert(title: String, message: String)  {
+        let actionSheetController = UIAlertController (title: title, message: message, preferredStyle: UIAlertControllerStyle.actionSheet)
+        
+        actionSheetController.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.cancel, handler: nil))
+        
+        self.present(actionSheetController, animated: true, completion: nil)
     }
     
 }

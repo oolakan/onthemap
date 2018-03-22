@@ -30,8 +30,6 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     var uniqueKey: String!
     var _latitude: Double!//from coredata
     var _longitude: Double!//from coredata
-    var latitude: Double!//from MKLocationsearch
-    var longitude: Double!//from MkLocationSearch
     
     var studentLocation: NSManagedObject!
     var context : NSManagedObjectContext!
@@ -39,7 +37,10 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     var locationObjectId: String!
     
     var requestType: String!
+    var longitude: Double!
+    var latitude: Double!
     var appDelegate: AppDelegate!
+    var apiClient: ApiClient!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -99,160 +100,97 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     }
     
     func getLocation(locationName: String)  {
-        
-        localSearchRequest = MKLocalSearchRequest()
-        localSearchRequest.naturalLanguageQuery = self.placeName
-        localSearch = MKLocalSearch(request: localSearchRequest)
-        localSearch.start { (localSearchResponse, error) -> Void in
-            
-            if localSearchResponse == nil{
-                let alertController = UIAlertController(title: nil, message: "Place Not Found", preferredStyle: UIAlertControllerStyle.alert)
-                alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default, handler: { (alertController) -> Void in
-                   self.navigateToLocationNamePage()
-                }))
-                self.present(alertController, animated: true, completion: nil)
-                return
-            }
-        
             self.pointAnnotation = MKPointAnnotation()
             self.pointAnnotation.title = self.placeName
-            self.pointAnnotation.coordinate = CLLocationCoordinate2D(latitude: localSearchResponse!.boundingRegion.center.latitude, longitude:     localSearchResponse!.boundingRegion.center.longitude)
-            self.longitude = localSearchResponse!.boundingRegion.center.longitude
-            self.latitude = localSearchResponse!.boundingRegion.center.latitude
+            self.pointAnnotation.coordinate = CLLocationCoordinate2D(latitude: self.latitude, longitude:     self.longitude)
+        
              self.mapView.setRegion(MKCoordinateRegionMakeWithDistance(self.pointAnnotation.coordinate, 1500, 1500), animated: true)
              let pin = PinAnnotation(title: self.placeName, subtitle: "", coordinate: self.pointAnnotation.coordinate)
             
             self.mapView.addAnnotation(pin)
-        }
     }
     
     @IBAction func postOrUpdateLocation(){
-        self.displayOverlay();
-        if requestType.elementsEqual(Constants.ParseParameterValues.POST_METHOD) {
-            self.postLocation()
-        }
-        else {
-            self.updateLocation()
+        if !InternetConnection.isConnectedToNetwork() {
+            self.showAlert(title: "Message", message: "No internet connection")
+            return
+        } else {
+            if requestType.elementsEqual(Constants.ParseParameterValues.POST_METHOD) {
+                self.postLocation()
+            }
+            else {
+                self.updateLocation()
+            }
         }
     }
     
     func updateLocation() {
-        var request = URLRequest(url: URL(string: Constants.Parse.STUDENT_LOCATIONS + "/" + self.locationObjectId)!)
-        request.httpMethod = Constants.ParseParameterValues.PUT_METHOD
-        self.prepareRequest(&request)
-        let session = URLSession.shared
-        let task = session.dataTask(with: request) {data, response, error in
-            if error != nil {
-                return
-            }
-            print(String(data: data!, encoding: .utf8)!)
-            let json: Any?
-            do
-            {
-                json = try JSONSerialization.jsonObject(with: data!, options: .allowFragments)
-            }
-            catch
-            {
-                print("Error parsing data");
-                return
-            }
-            guard let server_response = json as? NSDictionary else
-            {
-                print("Error parsing json")
-                return
-            }
-            print("updating..........")
-          //  {"objectId":"PSaVGIUf5Z","createdAt":"2018-03-17T20:02:46.940Z"}
-            if let updatedAt = server_response[Constants.Location.updatedAt] as? String
-            {
-                if !updatedAt.isEmpty {
-                        performUIUpdatesOnMain {
-                            self.dismiss(animated: false, completion: nil)
-                            self.goHome()
+        displayOverlay()
+        apiClient = ApiClient()
+        apiClient.updateLoation(locationObjectId: self.locationObjectId, firstName: self.firstName, lastName: self.lastName, placeName: self.placeName, longitude: self.longitude, latitude: self.latitude, completionHandler: {response in
+            switch response {
+                case .success(let serverResponse):
+                    if let updatedAt = serverResponse[Constants.Location.updatedAt] as? String
+                    {
+                        if !updatedAt.isEmpty {
+                            performUIUpdatesOnMain {
+                                self.goHome()
+                            }
                         }
+                    }
+            case .failure(let error):
+                print(error)
+                if !(self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: true, completion: nil)
+                    self.showAlert(title: "Message", message: error.localizedDescription)
                 }
+                
+                
             }
-            else {
-                print("error occured")
-            }
-        }
-        task.resume()
+        })
     }
    
     func postLocation() {
-        var request = URLRequest(url: URL(string: Constants.Parse.STUDENT_LOCATION)!)
-        request.httpMethod = Constants.ParseParameterValues.POST_METHOD
-        self.prepareRequest(&request)
-        let session = URLSession.shared
-        let task = session.dataTask(with: request) {data, response, error in
-            if error != nil {
-                return
-            }
-            print(String(data: data!, encoding: .utf8)!)
-            let json: Any?
-            do
-            {
-                json = try JSONSerialization.jsonObject(with: data!, options: .allowFragments)
-            }
-            catch
-            {
-                print("Error parsing data");
-                return
-            }
-            guard let server_response = json as? NSDictionary else
-            {
-                print("Error parsing json")
-                return
-            }
-            if let objectId = server_response[Constants.Location.objectId] as? String
-            {
-                if !objectId.isEmpty {
-                    let entity = NSEntityDescription.entity(forEntityName: Constants.Location.locationEntityName, in: self.context)
-                    self.studentLocation = NSManagedObject(entity: entity!, insertInto: self.context)
-                    self.studentLocation.setValue(objectId, forKey: Constants.Location.objectId)//save student location object id
-                    do {
-                        try self.context.save()
-                        performUIUpdatesOnMain {
-                                self.dismiss(animated: false, completion: nil)
-                            self.goHome()
+        displayOverlay()
+        apiClient = ApiClient()
+        apiClient.postLocation(firstName: self.firstName, lastName: self.lastName, placeName: self.placeName, longitude: self.longitude, latitude: self.latitude, completionHandler: {
+            response in
+            switch response {
+            case .success(let serverResponse):
+                if let objectId = serverResponse[Constants.Location.objectId] as? String
+                {
+                    if !objectId.isEmpty {
+                        let entity = NSEntityDescription.entity(forEntityName: Constants.Location.locationEntityName, in: self.context)
+                        self.studentLocation = NSManagedObject(entity: entity!, insertInto: self.context)
+                        self.studentLocation.setValue(objectId, forKey: Constants.Location.objectId)//save student location object id
+                        do {
+                            try self.context.save()
+                            performUIUpdatesOnMain {
+                                if !(self.presentingViewController?.isBeingDismissed)! {
+                                    self.dismiss(animated: false, completion: nil)
+                                    self.goHome()
+                                }
+                            }
+                        } catch {
+                            print("Failed saving")
                         }
-                    } catch {
-                        print("Failed saving")
+                        
                     }
-                    
+                }
+            case .failure(let error):
+                print(error)
+                  if !(self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: true, completion: nil)
+                    self.showAlert(title: "Message", message: error.localizedDescription)
                 }
             }
-            else {
-                print("error occured")
-            }
-        }
-        task.resume()
+        })
     }
     
-    
-    fileprivate func prepareRequest(_ request: inout URLRequest) {
-        request.addValue(Constants.ParseParameterValues.PARSE_APPLICATION_ID, forHTTPHeaderField: Constants.ParseParameterKeys.PARSE_APPLICATION_ID)
-        request.addValue(Constants.ParseParameterValues.REST_API_KEY, forHTTPHeaderField: Constants.ParseParameterKeys.REST_API_KEY)
-        request.addValue(Constants.ParseParameterValues.CONTENT_TYPE_FORMAT, forHTTPHeaderField: Constants.ParseParameterKeys.ACCEPT)
-        request.addValue(Constants.ParseParameterValues.CONTENT_TYPE_FORMAT, forHTTPHeaderField: Constants.ParseParameterKeys.CONTENT_TYPE)
-        
-        
-        let params: NSMutableDictionary = NSMutableDictionary()
-        params.setValue(UserDefaults.standard.string(forKey: Constants.User.accountKey), forKey: Constants.ParseParameterKeys.UNIQUE_KEY)
-        params.setValue(self.firstName, forKey: Constants.ParseParameterKeys.firstName)
-        params.setValue(self.lastName, forKeyPath: Constants.ParseParameterKeys.lastName)
-        params.setValue(self.placeName, forKey: Constants.ParseParameterKeys.mapString)
-        params.setValue(self.longitude, forKey: Constants.ParseParameterKeys.longitude)
-        params.setValue(self.latitude, forKey: Constants.ParseParameterKeys.latitude)
-        
-        let jsonData = try! JSONSerialization.data(withJSONObject: params, options: JSONSerialization.WritingOptions())
-        let jsonString = String(data: jsonData, encoding: .utf8)
-        
-        request.httpBody = jsonString?.data(using: .utf8)
-    }
-    
-   
     fileprivate func goHome() {
+        if !(self.presentingViewController?.isBeingDismissed)! {
+            self.dismiss(animated: true, completion: nil)
+        }
         var controller: HomeViewController!
         controller = self.storyboard?.instantiateViewController(withIdentifier: "onthemap") as? HomeViewController
         self.present(controller, animated: true, completion: nil)
@@ -305,6 +243,25 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
         return keyboardSize.cgRectValue.height
     }
     //https://stackoverflow.com/questions/27960556/loading-an-overlay-when-running-long-tasks-in-ios
+    func showActivityIndicatory()  {
+        let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
+        
+        let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+        loadingIndicator.startAnimating();
+        
+        alert.view.addSubview(loadingIndicator)
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func showAlert(title: String, message: String)  {
+        let actionSheetController = UIAlertController (title: title, message: message, preferredStyle: UIAlertControllerStyle.actionSheet)
+        
+        actionSheetController.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.cancel, handler: nil))
+        
+        self.present(actionSheetController, animated: true, completion: nil)
+    }
     func displayOverlay()  {
         let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
         

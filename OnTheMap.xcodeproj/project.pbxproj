@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		431BEFA8204ECB7100297450 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFA7204ECB7100297450 /* AppDelegate.swift */; };
-		431BEFAA204ECB7100297450 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFA9204ECB7100297450 /* ViewController.swift */; };
 		431BEFAD204ECB7100297450 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 431BEFAB204ECB7100297450 /* Main.storyboard */; };
 		431BEFB0204ECB7100297450 /* OnTheMap.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFAE204ECB7100297450 /* OnTheMap.xcdatamodeld */; };
 		431BEFB2204ECB7100297450 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 431BEFB1204ECB7100297450 /* Assets.xcassets */; };
@@ -25,12 +24,13 @@
 		431BEFDA2055B6EF00297450 /* Users.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFD92055B6EF00297450 /* Users.swift */; };
 		431BEFDC2055DA8E00297450 /* PinAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431BEFDB2055DA8E00297450 /* PinAnnotation.swift */; };
 		431EE235205D4CC8000CDBAE /* UserModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 431EE233205D4CC8000CDBAE /* UserModel.xcdatamodeld */; };
+		43FCF36B205EAF400002A094 /* ApiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FCF36A205EAF3F0002A094 /* ApiClient.swift */; };
+		43FCF36D20632CBD0002A094 /* InternetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FCF36C20632CBD0002A094 /* InternetConnection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		431BEFA4204ECB7100297450 /* OnTheMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OnTheMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		431BEFA7204ECB7100297450 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		431BEFA9204ECB7100297450 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		431BEFAC204ECB7100297450 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		431BEFAF204ECB7100297450 /* OnTheMap.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = OnTheMap.xcdatamodel; sourceTree = "<group>"; };
 		431BEFB1204ECB7100297450 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -48,6 +48,8 @@
 		431BEFD92055B6EF00297450 /* Users.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Users.swift; sourceTree = "<group>"; };
 		431BEFDB2055DA8E00297450 /* PinAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinAnnotation.swift; sourceTree = "<group>"; };
 		431EE234205D4CC8000CDBAE /* UserModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = UserModel.xcdatamodel; sourceTree = "<group>"; };
+		43FCF36A205EAF3F0002A094 /* ApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiClient.swift; sourceTree = "<group>"; };
+		43FCF36C20632CBD0002A094 /* InternetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetConnection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,13 +88,13 @@
 				431BEFBF204EE69C00297450 /* model */,
 				431BEFBE204EE69600297450 /* controller */,
 				431BEFA7204ECB7100297450 /* AppDelegate.swift */,
-				431BEFA9204ECB7100297450 /* ViewController.swift */,
 				431BEFAB204ECB7100297450 /* Main.storyboard */,
 				431BEFB1204ECB7100297450 /* Assets.xcassets */,
 				431BEFB3204ECB7100297450 /* LaunchScreen.storyboard */,
 				431BEFB6204ECB7100297450 /* Info.plist */,
 				431BEFAE204ECB7100297450 /* OnTheMap.xcdatamodeld */,
 				431BEFC8205014F100297450 /* GCDBlackBox.swift */,
+				43FCF36A205EAF3F0002A094 /* ApiClient.swift */,
 			);
 			path = OnTheMap;
 			sourceTree = "<group>";
@@ -131,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				431BEFCB205018B300297450 /* Constants.swift */,
+				43FCF36C20632CBD0002A094 /* InternetConnection.swift */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -210,15 +213,16 @@
 				431BEFD82055AFB600297450 /* NearestUserTableViewCell.swift in Sources */,
 				431BEFC4204EE8BF00297450 /* LoginViewController.swift in Sources */,
 				431BEFC9205014F100297450 /* GCDBlackBox.swift in Sources */,
+				43FCF36B205EAF400002A094 /* ApiClient.swift in Sources */,
 				431BEFD42054180500297450 /* LinkNameViewController.swift in Sources */,
 				431BEFB0204ECB7100297450 /* OnTheMap.xcdatamodeld in Sources */,
 				431BEFDA2055B6EF00297450 /* Users.swift in Sources */,
 				431BEFDC2055DA8E00297450 /* PinAnnotation.swift in Sources */,
 				431BEFCC205018B300297450 /* Constants.swift in Sources */,
-				431BEFAA204ECB7100297450 /* ViewController.swift in Sources */,
 				431BEFD2205417E500297450 /* LocationNameViewController.swift in Sources */,
 				431BEFA8204ECB7100297450 /* AppDelegate.swift in Sources */,
 				431BEFCE205417A400297450 /* NearestUsersMapViewController.swift in Sources */,
+				43FCF36D20632CBD0002A094 /* InternetConnection.swift in Sources */,
 				431BEFD0205417B600297450 /* NearestUsersListViewController.swift in Sources */,
 				431EE235205D4CC8000CDBAE /* UserModel.xcdatamodeld in Sources */,
 				431BEFD62055AB6800297450 /* HomeViewController.swift in Sources */,

@@ -14,35 +14,88 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     @IBOutlet weak var addPin: UIBarButtonItem!
     @IBOutlet weak var refresh: UIBarButtonItem!
     @IBOutlet weak var tableView: UITableView!
-    var users = [Users]()
+ 
     var reuseIdentifier: String = "nearestusercell"
     var locationObjectId: String!
+    var appDelegate: AppDelegate!
+    var apiClient: ApiClient!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.getLocations()
         tableView.dataSource = self
         tableView.delegate = self
     }
+    
+    @IBAction func logout(_ sender: Any) {
+        if !InternetConnection.isConnectedToNetwork() {
+            self.showErrorAlert(title: "Message", message: "No internet connection")
+            return
+        }
+        self.displayIndicator()
+        let apiClient = ApiClient()
+        apiClient.logout(completionHandler: { response in
+            switch response {
+            case .success(let res):
+                let id = res["id"] as! String
+                if !id.isEmpty {
+                    performUIUpdatesOnMain {
+                        UserDefaults.standard.set("", forKey: "account_key")//empty storage
+                        self.deleteAllData(entity: Constants.User.userEntityName)
+                    }
+                   
+                }
+            case .failure(let error):
+                print(error)
+                if (self.presentingViewController?.isBeingDismissed)! {
+                    self.dismiss(animated: true, completion: nil)
+                }
+            }
+        })
+    }
+    //https://stackoverflow.com/questions/24658641/ios-delete-all-core-data-swift/38449688
+    func deleteAllData(entity: String)
+    {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let managedContext = appDelegate.persistentContainer.viewContext
+        let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
+        do {
+            try managedContext.execute(userData)
+            performUIUpdatesOnMain {
+                self.dismiss(animated: true, completion: nil)
+                var controller: LoginViewController!
+                controller = self.storyboard?.instantiateViewController(withIdentifier: "login") as! LoginViewController
+                self.present(controller, animated: true, completion: nil)
+            }
+        }
+        catch {
+            print(error)
+        }
+    }
+    
+    
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.users.count
+        return (UIApplication.shared.delegate as! AppDelegate).users.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as? NearestUserTableViewCell else {
             return UITableViewCell()
         }
-        cell.userName.text = "\(self.users[indexPath.row].firstName) \(self.users[indexPath.row].lastName)"
+        cell.userName.text = "\((UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.firstName] as! String)\((UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.lastName] as! String)"
+        
         cell.pin.image = UIImage(named: "icon_pin")
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //https://stackoverflow.com/questions/25945324/swift-open-link-in-safari
-        guard let url = URL(string: self.users[indexPath.row].mediaURL as! String) else {
+        guard let url = URL(string: (UIApplication.shared.delegate as! AppDelegate).users[indexPath.row].dict[Constants.ParseResponseValues.mediaURL] as! String ) else {
             return
         }
         if #available(iOS 10.0, *) {
@@ -52,66 +105,12 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         }
     }
     
-    @IBAction func refreshStudentLocations(_ sender: Any) {
-        self.getLocations()
-    }
     func getLocations() {
-        self.displayOverlay();
-        let methodParameters = [
-            Constants.ParseParameterKeys.LIMIT: 20,
-            Constants.ParseParameterKeys.SKIP: 400
-        ]
-        
-        let url = URL(string: Constants.Parse.STUDENT_LOCATIONS + self.escapedParameters(methodParameters as [String : AnyObject]))
-        
-        var request = URLRequest(url: url!)
-        request.addValue(Constants.ParseParameterValues.PARSE_APPLICATION_ID, forHTTPHeaderField: Constants.ParseParameterKeys.PARSE_APPLICATION_ID)
-        request.addValue(Constants.ParseParameterValues.REST_API_KEY, forHTTPHeaderField: Constants.ParseParameterKeys.REST_API_KEY)
-        
-        let session = URLSession.shared
-        let task = session.dataTask(with: request) {data, response, error in
-            if error != nil {
-                // self.displayError((error as? String)!, url: url!)
-                return
-            }
-            else {
-                if let data = data {
-                    let parseResult: NSDictionary!
-                    do {
-                        parseResult = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as!NSDictionary
-                    }
-                    catch {
-                        self.displayError("Could not parse the data as JSON '\(data)'", url: url!)
-                        return
-                    }
-                    //                    print(parseResult)
-                    guard let arrayOfResults = parseResult[Constants.ParseResponseValues.results] as? [[String:AnyObject]] else {
-                        print("Cannot find key 'Basic' in \(parseResult)")
-                        return
-                    }
-                    if arrayOfResults.count > 0 {
-                        self.users = [Users]()//reinitialize user
-                        for result in arrayOfResults {
-                            let user = Users(firstName: result[Constants.ParseResponseValues.firstName] as! String,
-                                             lastName: result[Constants.ParseResponseValues.lastName] as! String,
-                                             latitude: result[Constants.ParseResponseValues.latitude] as! Double,
-                                             longitude: result[Constants.ParseResponseValues.longitude] as! Double,
-                                             mapString: result[Constants.ParseResponseValues.mapString] as! String,
-                                             mediaURL: result[Constants.ParseResponseValues.mediaURL] as! String,
-                                             objectId: result[Constants.ParseResponseValues.objectId] as! String,
-                                             uniqueKey: result[Constants.ParseResponseValues.uniqueKey] as! String)
-                            self.users.append(user)
-                        }
-                    }
-                    performUIUpdatesOnMain {
-                        self.dismiss(animated: false, completion: nil)
-                        self.tableView.reloadData()
-                    }
-                }
-            }
-            print(String(data: data!, encoding: .utf8) as Any)
-        }
-        task.resume()
+        apiClient = ApiClient()
+        print((UIApplication.shared.delegate as! AppDelegate).users)
+        performUIUpdatesOnMain {
+        self.tableView.reloadData()
+         }
     }
     private func escapedParameters(_ parameters: [String:AnyObject]) -> String {
         if parameters.isEmpty {
@@ -189,8 +188,16 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         print("URL at time of error: \(url)")
     }
     
+    func showErrorAlert(title: String, message: String)  {
+        let actionSheetController = UIAlertController (title: title, message: message, preferredStyle: UIAlertControllerStyle.actionSheet)
+        
+        actionSheetController.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.cancel, handler: nil))
+        
+        self.present(actionSheetController, animated: true, completion: nil)
+    }
+    
     //https://stackoverflow.com/questions/27960556/loading-an-overlay-when-running-long-tasks-in-ios
-    func displayOverlay()  {
+    func displayIndicator()  {
         let alert = UIAlertController(title: nil, message: "Please wait...", preferredStyle: .alert)
         
         let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))

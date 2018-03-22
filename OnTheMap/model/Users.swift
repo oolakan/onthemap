@@ -9,12 +9,22 @@
 import Foundation
 
 struct Users {
-    var firstName: String
-    var lastName: String
-    var latitude: Double
-    var longitude: Double
-    var mapString: Any
-    var mediaURL: Any
-    var objectId: Any
-    var uniqueKey: Any
+    var firstName: String = ""
+    var lastName: String = ""
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+    var mapString: String = ""
+    var mediaURL: String = ""
+    var objectId: String = ""
+    var uniqueKey: String = ""
+    var dict: [String: AnyObject]
+    
+    init(dict: [String: AnyObject]) {
+        self.dict = dict
+    }
+    
+}
+
+struct StudentInformation {
+    var studentInfo: [Users]
 }
