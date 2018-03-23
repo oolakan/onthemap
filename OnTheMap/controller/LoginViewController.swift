@@ -20,6 +20,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     var newUser: NSManagedObject!
     var context : NSManagedObjectContext!
+    let moveViewUpOffset = 180
     override func viewDidLoad() {
         super.viewDidLoad()
         configureBtn()
@@ -163,7 +164,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @objc func keyboardWillShow(_ notification:Notification) {
         if (passwordField.isEditing) {
-            view.frame.origin.y -= getKeyboardHeight(notification) - 180
+            view.frame.origin.y -= getKeyboardHeight(notification) - (moveViewUpOffset as! CGFloat)
         }
     }
     

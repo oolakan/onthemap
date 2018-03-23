@@ -42,6 +42,7 @@ class LinkNameViewController: UIViewController , UITextFieldDelegate, MKMapViewD
     var appDelegate: AppDelegate!
     var apiClient: ApiClient!
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         appDelegate = UIApplication.shared.delegate as! AppDelegate

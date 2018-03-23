@@ -9,5 +9,6 @@
 import Foundation
 
 class StudentDataSource {
-    var studentInfo = [Users]()
+    static let shared = StudentDataSource()
+    var studentInfo: [Users] = [Users]()
 }

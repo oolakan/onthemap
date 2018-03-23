@@ -16,7 +16,7 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
     var localSearchRequest:MKLocalSearchRequest!
     var localSearch:MKLocalSearch!
     var localSearchResponse:MKLocalSearchResponse!
-    
+    let moveViewUpOffset = 100
     override func viewDidLoad() {
         super.viewDidLoad()
         subscribeToKeyboardNotifications()
@@ -97,12 +97,11 @@ class LocationNameViewController: UIViewController, UITextFieldDelegate {
     }
     
     func unsubscribeFromKeyboardNotifications() {
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.removeObserver(self)
     }
     @objc func keyboardWillShow(_ notification:Notification) {
         if (locationName.isEditing) {
-            self.view.frame.origin.y -= getKeyboardHeight(notification) - 100
+            self.view.frame.origin.y -= getKeyboardHeight(notification) - (moveViewUpOffset as! CGFloat)
         }
     }
     @objc func keyboardWillHide(_ notification: Notification) {

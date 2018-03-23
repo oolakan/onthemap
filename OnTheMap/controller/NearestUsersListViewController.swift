@@ -19,8 +19,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     var locationObjectId: String!
     var appDelegate: AppDelegate!
     var apiClient: ApiClient!
-    var studentsDataSource: StudentDataSource!
-    
+   
     override func viewDidLoad() {
         super.viewDidLoad()
         self.getLocations()
@@ -41,8 +40,10 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
                 print(students)
                 performUIUpdatesOnMain {
                     if students.studentInfo.count > 0 { //data already saved in appdelegate
-                        self.studentsDataSource = students
-                        self.dismiss(animated: true, completion: nil)
+                        for student in students.studentInfo {
+                            StudentDataSource.shared.studentInfo.append(student)
+                            self.dismiss(animated: true, completion: nil)
+                        }
                         self.tableView.reloadData()
                     }
                     else {
@@ -78,6 +79,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
                 let id = res["id"] as! String
                 if !id.isEmpty {
                     performUIUpdatesOnMain {
+                        self.dismiss(animated: true, completion: nil)//dismiss overlay
                         UserDefaults.standard.set("", forKey: "account_key")//empty storage
                         self.deleteAllData(entity: Constants.User.userEntityName)
                     }
@@ -99,8 +101,7 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
         let userData = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: entity))
         do {
             try managedContext.execute(userData)
-            self.dismiss(animated: true, completion: nil)//dismiss overlay
-            self.dismiss(animated: true, completion: nil)//dismiss view controller
+            self.dismiss(animated:true)//dismiss view controller
             
         }
         catch {
@@ -113,21 +114,21 @@ class NearestUsersListViewController: UIViewController, UITableViewDataSource, U
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return studentsDataSource != nil ? studentsDataSource.studentInfo.count : 0
+        return StudentDataSource.shared != nil ? StudentDataSource.shared.studentInfo.count : 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as? NearestUserTableViewCell else {
             return UITableViewCell()
         }
-        cell.userName.text = "\(studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.firstName] as! String)\(studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.lastName] as! String)"
+        cell.userName.text = "\(StudentDataSource.shared.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.firstName] as! String)\(StudentDataSource.shared.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.lastName] as! String)"
         
         cell.pin.image = UIImage(named: "icon_pin")
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let url = URL(string: studentsDataSource.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.mediaURL] as! String ) else {
+        guard let url = URL(string: StudentDataSource.shared.studentInfo[indexPath.row].dict[Constants.ParseResponseValues.mediaURL] as! String ) else {
             return
         }
         if #available(iOS 10.0, *) {
